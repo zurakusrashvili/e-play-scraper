@@ -34,20 +34,37 @@ def get_cookies_from_env():
 
 
 def refresh_cookies_automated():
-    """Refresh cookies using automated browser"""
+    """Refresh cookies using automated methods"""
     print("Attempting to refresh cookies automatically...")
     
-    # Try the new method first (via API)
+    # Method 1: Try cloudscraper (best for Cloudflare)
+    try:
+        from get_cookies_cloudscraper import get_cookies_cloudscraper
+        cookies = get_cookies_cloudscraper()
+        if cookies and cookies.get('cf_clearance'):
+            # Test the cookies
+            if test_cookies(cookies):
+                print("✓ Got valid cookies via cloudscraper")
+                return cookies
+            else:
+                print("⚠️  cloudscraper cookies failed validation")
+    except ImportError:
+        print("cloudscraper not available, trying other methods...")
+    except Exception as e:
+        print(f"cloudscraper method failed: {e}, trying fallback...")
+    
+    # Method 2: Try browser API method
     try:
         from get_cookies_via_browser_api import get_cookies_via_api
         cookies = get_cookies_via_api()
         if cookies and cookies.get('cf_clearance'):
-            print("✓ Got cookies via browser API method")
-            return cookies
+            if test_cookies(cookies):
+                print("✓ Got valid cookies via browser API method")
+                return cookies
     except Exception as e:
         print(f"Browser API method failed: {e}, trying fallback...")
     
-    # Fallback to original method
+    # Method 3: Fallback to original Playwright method
     try:
         # Try to run the cookie refresh script
         result = subprocess.run(

@@ -20,7 +20,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install curl_cffi gspread google-auth playwright
+        pip install curl_cffi gspread google-auth playwright cloudscraper
         playwright install chromium
     
     - name: Run scraper
