@@ -1,0 +1,36 @@
+name: E-Play Contracts Scraper
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC (adjust timezone as needed)
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install curl_cffi gspread google-auth
+    
+    - name: Run scraper
+      env:
+        CF_CLEARANCE: ${{ secrets.CF_CLEARANCE }}
+        GA_COOKIE: ${{ secrets.GA_COOKIE }}
+        GA_ZH4G2KK1JY: ${{ secrets.GA_ZH4G2KK1JY }}
+        UPLOAD_TO_SHEETS: ${{ secrets.UPLOAD_TO_SHEETS }}
+        SHEETS_CREDENTIALS_JSON: ${{ secrets.SHEETS_CREDENTIALS_JSON }}
+        SHEETS_SPREADSHEET_NAME: ${{ secrets.SHEETS_SPREADSHEET_NAME }}
+        SHEETS_WORKSHEET_NAME: ${{ secrets.SHEETS_WORKSHEET_NAME }}
+      run: |
+        cd e-play-scraper
+        python cloud_scraper.py

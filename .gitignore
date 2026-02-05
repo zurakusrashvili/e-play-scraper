@@ -1,0 +1,48 @@
+# Ignore files NOT related to e-play-scraper
+
+# Other scraper files (people scraper)
+scrape_people.py
+people_details.*
+people_list.json
+data_schema.json
+json_to_csv.py
+postman_collection.json
+SETUP_GUIDE.md
+
+# Node.js files
+node_modules/
+package.json
+package-lock.json
+
+# Generated data files (e-play-scraper)
+e-play-scraper/contracts.json
+e-play-scraper/contracts.csv
+e-play-scraper/credentials.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
