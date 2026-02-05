@@ -100,20 +100,38 @@ def get_cookies():
             print("Attempting automatic cookie refresh...")
             refreshed = refresh_cookies_automated()
             if refreshed and refreshed.get('cf_clearance'):
-                return refreshed
+                # Test the refreshed cookies
+                print("Testing refreshed cookies...")
+                if test_cookies(refreshed):
+                    return refreshed
+                else:
+                    print("⚠️  Refreshed cookies failed validation")
+                    print("   Cloudflare may be blocking automated browsers")
+                    print("   Recommendation: Use manual cookies (set CF_CLEARANCE secret)")
         
-        print("ERROR: No cookies available!")
+        print("ERROR: No valid cookies available!")
+        print("   Please set CF_CLEARANCE secret in GitHub with a fresh cookie from your browser")
         return None
     
     # Test cookies by making a request
-    print("Testing cookies...")
+    print("Testing cookies from environment...")
     test_result = test_cookies(cookies)
     
-    if not test_result and AUTO_REFRESH_COOKIES:
-        print("Cookies appear invalid, attempting refresh...")
-        refreshed = refresh_cookies_automated()
-        if refreshed and refreshed.get('cf_clearance'):
-            return refreshed
+    if not test_result:
+        print("⚠️  Environment cookies failed validation")
+        if AUTO_REFRESH_COOKIES:
+            print("Attempting automatic cookie refresh...")
+            refreshed = refresh_cookies_automated()
+            if refreshed and refreshed.get('cf_clearance'):
+                # Test the refreshed cookies
+                if test_cookies(refreshed):
+                    return refreshed
+                else:
+                    print("⚠️  Auto-refresh failed - Cloudflare may be blocking")
+                    print("   Please update CF_CLEARANCE secret with fresh cookie from browser")
+        else:
+            print("   Please update CF_CLEARANCE secret with fresh cookie from browser")
+        return None
     
     return cookies
 
@@ -199,16 +217,25 @@ def fetch_contracts_page(page=1, quantity=120, cookies=None):
             # Check status code
             if response.status_code == 403:
                 print(f"Got 403 on page {page} (attempt {attempt + 1}/{max_retries})")
+                print("⚠️  Cloudflare is blocking the request")
+                print("   This usually means cookies are invalid or Cloudflare detected automation")
+                
                 if AUTO_REFRESH_COOKIES and attempt < max_retries - 1:
                     print("Refreshing cookies and retrying...")
                     refreshed = refresh_cookies_automated()
                     if refreshed and refreshed.get('cf_clearance'):
-                        cookies = refreshed
-                        time.sleep(2)  # Wait a bit before retry
-                        continue
+                        # Test the new cookies
+                        if test_cookies(refreshed):
+                            cookies = refreshed
+                            time.sleep(2)  # Wait a bit before retry
+                            continue
+                        else:
+                            print("⚠️  Refreshed cookies also failed validation")
+                            print("   Recommendation: Use manual cookies (set CF_CLEARANCE secret)")
                 else:
                     print("403 error persists - cookies may not be valid for API")
-                    print(f"Response: {response.text[:200]}")
+                    print("   Please update CF_CLEARANCE secret with fresh cookie from browser")
+                    print(f"   Response preview: {response.text[:200]}")
                     return None
             
             response.raise_for_status()
