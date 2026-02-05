@@ -20,8 +20,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install curl_cffi gspread google-auth playwright cloudscraper
-        playwright install chromium
+        pip install curl_cffi gspread google-auth cloudscraper
     
     - name: Run scraper
       env:
@@ -35,10 +34,10 @@ jobs:
         AUTO_REFRESH_COOKIES: ${{ secrets.AUTO_REFRESH_COOKIES }}
       run: |
         cd e-play-scraper
-        # Use auto-cookie version if AUTO_REFRESH_COOKIES is enabled
+        # Use cloudscraper version if AUTO_REFRESH_COOKIES is enabled (best for Cloudflare)
         if [ "$AUTO_REFRESH_COOKIES" = "true" ]; then
-          echo "Using automated cookie refresh..."
-          python cloud_scraper_auto_cookies.py
+          echo "Using cloudscraper (auto Cloudflare bypass)..."
+          python cloud_scraper_cloudscraper.py
         else
           echo "Using manual cookies from secrets..."
           python cloud_scraper.py
