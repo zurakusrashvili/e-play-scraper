@@ -20,7 +20,8 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install curl_cffi gspread google-auth
+        pip install curl_cffi gspread google-auth playwright
+        playwright install chromium
     
     - name: Run scraper
       env:
@@ -31,6 +32,14 @@ jobs:
         SHEETS_CREDENTIALS_JSON: ${{ secrets.SHEETS_CREDENTIALS_JSON }}
         SHEETS_SPREADSHEET_NAME: ${{ secrets.SHEETS_SPREADSHEET_NAME }}
         SHEETS_WORKSHEET_NAME: ${{ secrets.SHEETS_WORKSHEET_NAME }}
+        AUTO_REFRESH_COOKIES: ${{ secrets.AUTO_REFRESH_COOKIES }}
       run: |
         cd e-play-scraper
-        python cloud_scraper.py
+        # Use auto-cookie version if AUTO_REFRESH_COOKIES is enabled
+        if [ "$AUTO_REFRESH_COOKIES" = "true" ]; then
+          echo "Using automated cookie refresh..."
+          python cloud_scraper_auto_cookies.py
+        else
+          echo "Using manual cookies from secrets..."
+          python cloud_scraper.py
+        fi

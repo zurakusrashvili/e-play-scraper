@@ -146,17 +146,38 @@ git push
    - In left sidebar: `Secrets and variables` → `Actions`
    - Click `New repository secret`
 
-3. **Add each secret** (click `New repository secret` for each):
+3. **Choose your setup:**
 
+   ### Option A: Automated Cookie Refresh (Recommended - No Manual Updates!)
+   
+   If you want cookies to refresh automatically (so you never have to update them):
+   
+   | Secret Name | Value | Required? |
+   |-------------|-------|-----------|
+   | `AUTO_REFRESH_COOKIES` | Type: `true` | ✅ **YES** (for auto-refresh) |
+   | `CF_CLEARANCE` | Paste cookie from Step 2 (optional fallback) | ❌ No (but recommended as backup) |
+   | `UPLOAD_TO_SHEETS` | Type: `true` (if using Sheets) | ⚠️ If using Sheets |
+   | `SHEETS_CREDENTIALS_JSON` | Paste JSON string from Step 3.3 | ⚠️ If using Sheets |
+   | `SHEETS_SPREADSHEET_NAME` | Type: `E-Play Contracts` | ⚠️ If using Sheets |
+   | `SHEETS_WORKSHEET_NAME` | Type: `Contracts` | ❌ No |
+   
+   **With this setup:** Cookies refresh automatically! You never need to update `CF_CLEARANCE` manually.
+   
+   ### Option B: Manual Cookies (Update When They Expire)
+   
+   If you prefer to manage cookies manually:
+   
    | Secret Name | Value | Required? |
    |-------------|-------|-----------|
    | `CF_CLEARANCE` | Paste the `cf_clearance` cookie value from Step 2 | ✅ **YES** |
-   | `GA_COOKIE` | Paste the `_ga` cookie value (if you have it) | ❌ No |
-   | `GA_ZH4G2KK1JY` | Paste the `_ga_ZH4G2KK1JY` cookie value (if you have it) | ❌ No |
-   | `UPLOAD_TO_SHEETS` | Type: `true` (to enable Sheets upload) | ⚠️ If using Sheets |
-   | `SHEETS_CREDENTIALS_JSON` | Paste the JSON string from Step 3.3 | ⚠️ If using Sheets |
-   | `SHEETS_SPREADSHEET_NAME` | Type: `E-Play Contracts` (or your sheet name) | ⚠️ If using Sheets |
-   | `SHEETS_WORKSHEET_NAME` | Type: `Contracts` (or leave default) | ❌ No |
+   | `GA_COOKIE` | Paste the `_ga` cookie value (optional) | ❌ No |
+   | `GA_ZH4G2KK1JY` | Paste the `_ga_ZH4G2KK1JY` cookie value (optional) | ❌ No |
+   | `UPLOAD_TO_SHEETS` | Type: `true` (if using Sheets) | ⚠️ If using Sheets |
+   | `SHEETS_CREDENTIALS_JSON` | Paste JSON string from Step 3.3 | ⚠️ If using Sheets |
+   | `SHEETS_SPREADSHEET_NAME` | Type: `E-Play Contracts` | ⚠️ If using Sheets |
+   | `SHEETS_WORKSHEET_NAME` | Type: `Contracts` | ❌ No |
+   
+   **With this setup:** You'll need to update `CF_CLEARANCE` manually when it expires.
 
 4. **Click `Add secret`** for each one
 

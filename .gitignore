@@ -18,6 +18,8 @@ package-lock.json
 e-play-scraper/contracts.json
 e-play-scraper/contracts.csv
 e-play-scraper/credentials.json
+e-play-scraper/.env.cookies
+.env.cookies
 
 # Python cache
 __pycache__/
