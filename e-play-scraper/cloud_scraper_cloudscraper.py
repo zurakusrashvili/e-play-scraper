@@ -120,12 +120,35 @@ def scrape_all_contracts():
             break
         
         for item in items:
+            # Try multiple ways to get company names (API structure might vary)
+            company1 = ''
+            company2 = ''
+            
+            # Method 1: subject1/subject2 (most common)
+            if item.get('subject1'):
+                company1 = item.get('subject1', '')
+            if item.get('subject2'):
+                company2 = item.get('subject2', '')
+            
+            # Method 2: company1/company2 objects
+            if not company1 and item.get('company1'):
+                company1 = item.get('company1', {}).get('name', '') if isinstance(item.get('company1'), dict) else str(item.get('company1', ''))
+            if not company2 and item.get('company2'):
+                company2 = item.get('company2', {}).get('name', '') if isinstance(item.get('company2'), dict) else str(item.get('company2', ''))
+            
+            # Get subjects
+            subjects = item.get('subject', '')
+            if not subjects and company1 and company2:
+                subjects = f"{company1} 🤝 {company2}"
+            elif not subjects and company1:
+                subjects = company1
+            
             contract = {
                 'id': item.get('id', ''),
                 'link': item.get('url', ''),
-                'company1': item.get('company1', {}).get('name', ''),
-                'company2': item.get('company2', {}).get('name', ''),
-                'subjects': item.get('subject', ''),
+                'company1': company1,
+                'company2': company2,
+                'subjects': subjects,
                 'date': item.get('date', ''),
                 'country': item.get('market', [''])[0].upper() if item.get('market') else '',
                 'markets': ', '.join(item.get('market', [])),
