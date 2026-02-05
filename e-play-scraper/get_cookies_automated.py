@@ -13,12 +13,28 @@ def get_fresh_cookies():
     print("Getting fresh cookies from e-play.pl...")
     
     with sync_playwright() as p:
-        # Launch browser (headless)
-        browser = p.chromium.launch(headless=True)
+        # Launch browser with stealth settings
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                '--disable-blink-features=AutomationControlled',
+                '--disable-dev-shm-usage',
+                '--no-sandbox'
+            ]
+        )
         context = browser.new_context(
             user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36',
-            viewport={'width': 1920, 'height': 1080}
+            viewport={'width': 1920, 'height': 1080},
+            locale='en-US',
+            timezone_id='America/New_York'
         )
+        
+        # Add stealth script to hide automation
+        context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            });
+        """)
         page = context.new_page()
         
         try:
@@ -26,8 +42,45 @@ def get_fresh_cookies():
             print("Navigating to e-play.pl...")
             page.goto('https://e-play.pl/umowy/', wait_until='networkidle', timeout=60000)
             
-            # Wait a bit for any JavaScript/Cloudflare challenges
-            time.sleep(3)
+            # Wait for Cloudflare challenge to complete (check for cf-browser-verification or similar)
+            print("Waiting for Cloudflare challenge...")
+            max_wait = 30  # Max 30 seconds
+            waited = 0
+            while waited < max_wait:
+                # Check if page loaded successfully (not a challenge page)
+                page_content = page.content()
+                if 'cf-browser-verification' not in page_content.lower() and 'challenge' not in page.title().lower():
+                    # Page loaded, wait a bit more for cookies to be set
+                    time.sleep(2)
+                    break
+                time.sleep(1)
+                waited += 1
+            
+            # Make a test request to the API through the browser to ensure cookies are valid
+            print("Making test API request through browser...")
+            try:
+                # Use browser's fetch to make API request (this will use browser cookies)
+                api_response = page.evaluate("""
+                    async () => {
+                        const response = await fetch('https://e-play.pl/wp-json/contracts/v1/filter', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': '*/*',
+                                'Origin': 'https://e-play.pl',
+                                'Referer': 'https://e-play.pl/umowy/'
+                            },
+                            body: JSON.stringify({paged: 1, quantity: 1})
+                        });
+                        return response.status;
+                    }
+                """)
+                print(f"Test API request status: {api_response}")
+            except Exception as e:
+                print(f"Test API request failed (may be okay): {e}")
+            
+            # Wait a bit more for any final cookie updates
+            time.sleep(2)
             
             # Get cookies
             cookies = context.cookies()

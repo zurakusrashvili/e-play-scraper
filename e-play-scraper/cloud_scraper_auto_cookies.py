@@ -37,6 +37,17 @@ def refresh_cookies_automated():
     """Refresh cookies using automated browser"""
     print("Attempting to refresh cookies automatically...")
     
+    # Try the new method first (via API)
+    try:
+        from get_cookies_via_browser_api import get_cookies_via_api
+        cookies = get_cookies_via_api()
+        if cookies and cookies.get('cf_clearance'):
+            print("✓ Got cookies via browser API method")
+            return cookies
+    except Exception as e:
+        print(f"Browser API method failed: {e}, trying fallback...")
+    
+    # Fallback to original method
     try:
         # Try to run the cookie refresh script
         result = subprocess.run(
@@ -173,40 +184,60 @@ def fetch_contracts_page(page=1, quantity=120, cookies=None):
         'date_to': ''
     }
     
-    try:
-        response = requests.post(
-            API_URL,
-            json=payload,
-            headers=HEADERS,
-            cookies=cookies,
-            timeout=30,
-            impersonate="chrome"
-        )
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print(f"Error fetching page {page}: {e}")
-        # If 403/401, cookies might be expired - try refresh
-        if '403' in str(e) or '401' in str(e):
-            print("Got 403/401 - cookies may be expired")
-            if AUTO_REFRESH_COOKIES:
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                API_URL,
+                json=payload,
+                headers=HEADERS,
+                cookies=cookies,
+                timeout=30,
+                impersonate="chrome"
+            )
+            
+            # Check status code
+            if response.status_code == 403:
+                print(f"Got 403 on page {page} (attempt {attempt + 1}/{max_retries})")
+                if AUTO_REFRESH_COOKIES and attempt < max_retries - 1:
+                    print("Refreshing cookies and retrying...")
+                    refreshed = refresh_cookies_automated()
+                    if refreshed and refreshed.get('cf_clearance'):
+                        cookies = refreshed
+                        time.sleep(2)  # Wait a bit before retry
+                        continue
+                else:
+                    print("403 error persists - cookies may not be valid for API")
+                    print(f"Response: {response.text[:200]}")
+                    return None
+            
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            if e.response and e.response.status_code == 403:
+                print(f"HTTP 403 error on page {page}: {e}")
+                if AUTO_REFRESH_COOKIES and attempt < max_retries - 1:
+                    print("Refreshing cookies and retrying...")
+                    refreshed = refresh_cookies_automated()
+                    if refreshed and refreshed.get('cf_clearance'):
+                        cookies = refreshed
+                        time.sleep(2)
+                        continue
+                return None
+            raise
+        except Exception as e:
+            print(f"Error fetching page {page}: {e}")
+            if attempt < max_retries - 1 and AUTO_REFRESH_COOKIES:
+                print("Retrying with fresh cookies...")
                 refreshed = refresh_cookies_automated()
                 if refreshed:
-                    # Retry with new cookies
-                    try:
-                        response = requests.post(
-                            API_URL,
-                            json=payload,
-                            headers=HEADERS,
-                            cookies=refreshed,
-                            timeout=30,
-                            impersonate="chrome"
-                        )
-                        response.raise_for_status()
-                        return response.json()
-                    except:
-                        pass
-        return None
+                    cookies = refreshed
+                    time.sleep(2)
+                    continue
+            return None
+    
+    return None
 
 
 def scrape_all_contracts():
