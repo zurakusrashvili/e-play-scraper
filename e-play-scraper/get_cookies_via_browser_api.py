@@ -36,8 +36,8 @@ def get_cookies_via_api():
         
         try:
             # First, visit the main page to get initial cookies
-            print("Visiting e-play.pl...")
-            page.goto('https://e-play.pl/umowy/', wait_until='domcontentloaded', timeout=60000)
+            print("Visiting e-play.com...")
+            page.goto('https://e-play.com/deals/', wait_until='domcontentloaded', timeout=60000)
             time.sleep(5)  # Wait for Cloudflare
             
             # Now make API request through browser (this ensures cookies work for API)
@@ -45,13 +45,13 @@ def get_cookies_via_api():
             api_result = page.evaluate("""
                 async () => {
                     try {
-                        const response = await fetch('https://e-play.pl/wp-json/contracts/v1/filter', {
+                        const response = await fetch('https://e-play.com/wp-json/contracts/v1/filter', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': '*/*',
-                                'Origin': 'https://e-play.pl',
-                                'Referer': 'https://e-play.pl/umowy/'
+                                'Origin': 'https://e-play.com',
+                                'Referer': 'https://e-play.com/deals/'
                             },
                             body: JSON.stringify({paged: 1, quantity: 1})
                         });

@@ -1,11 +1,11 @@
 """
-Check if e-play.pl/umowy/ is server-side rendered or uses API
+Check if e-play.com/deals/ is server-side rendered or uses API
 """
 from curl_cffi import requests
 from bs4 import BeautifulSoup
 import json
 
-url = 'https://e-play.pl/umowy/'
+url = 'https://e-play.com/deals/'
 
 print("Fetching page...")
 response = requests.get(url, impersonate="chrome")

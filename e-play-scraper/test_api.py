@@ -13,8 +13,8 @@ COOKIES = {
 HEADERS = {
     'accept': '*/*',
     'content-type': 'application/json',
-    'origin': 'https://e-play.pl',
-    'referer': 'https://e-play.pl/umowy/',
+    'origin': 'https://e-play.com',
+    'referer': 'https://e-play.com/deals/',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
@@ -33,7 +33,7 @@ payload = {
 
 print("Testing API...")
 response = requests.post(
-    'https://e-play.pl/wp-json/contracts/v1/filter',
+    'https://e-play.com/wp-json/contracts/v1/filter',
     headers=HEADERS,
     cookies=COOKIES,
     json=payload,

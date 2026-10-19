@@ -1,6 +1,6 @@
 """
 Automated cookie fetcher using Playwright
-Gets fresh cookies from e-play.pl automatically
+Gets fresh cookies from e-play.com automatically
 """
 import json
 import os
@@ -9,8 +9,8 @@ from playwright.sync_api import sync_playwright
 
 
 def get_fresh_cookies():
-    """Get fresh cookies from e-play.pl using headless browser"""
-    print("Getting fresh cookies from e-play.pl...")
+    """Get fresh cookies from e-play.com using headless browser"""
+    print("Getting fresh cookies from e-play.com...")
     
     with sync_playwright() as p:
         # Launch browser with stealth settings
@@ -39,8 +39,8 @@ def get_fresh_cookies():
         
         try:
             # Navigate to the page (this will trigger Cloudflare if needed)
-            print("Navigating to e-play.pl...")
-            page.goto('https://e-play.pl/umowy/', wait_until='networkidle', timeout=60000)
+            print("Navigating to e-play.com...")
+            page.goto('https://e-play.com/deals/', wait_until='networkidle', timeout=60000)
             
             # Wait for Cloudflare challenge to complete (check for cf-browser-verification or similar)
             print("Waiting for Cloudflare challenge...")
@@ -62,13 +62,13 @@ def get_fresh_cookies():
                 # Use browser's fetch to make API request (this will use browser cookies)
                 api_response = page.evaluate("""
                     async () => {
-                        const response = await fetch('https://e-play.pl/wp-json/contracts/v1/filter', {
+                        const response = await fetch('https://e-play.com/wp-json/contracts/v1/filter', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': '*/*',
-                                'Origin': 'https://e-play.pl',
-                                'Referer': 'https://e-play.pl/umowy/'
+                                'Origin': 'https://e-play.com',
+                                'Referer': 'https://e-play.com/deals/'
                             },
                             body: JSON.stringify({paged: 1, quantity: 1})
                         });

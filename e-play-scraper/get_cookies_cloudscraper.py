@@ -29,8 +29,8 @@ def get_cookies_cloudscraper():
     
     try:
         # Visit the page (cloudscraper handles Cloudflare challenge)
-        print("Visiting e-play.pl (solving Cloudflare challenge)...")
-        response = scraper.get('https://e-play.pl/umowy/', timeout=30)
+        print("Visiting e-play.com (solving Cloudflare challenge)...")
+        response = scraper.get('https://e-play.com/deals/', timeout=30)
         
         if response.status_code != 200:
             print(f"⚠️  Got status {response.status_code}")
@@ -41,13 +41,13 @@ def get_cookies_cloudscraper():
         # Test API with the same session (cookies are in scraper.session)
         print("Testing API endpoint...")
         api_response = scraper.post(
-            'https://e-play.pl/wp-json/contracts/v1/filter',
+            'https://e-play.com/wp-json/contracts/v1/filter',
             json={'paged': 1, 'quantity': 1},
             headers={
                 'Content-Type': 'application/json',
                 'Accept': '*/*',
-                'Origin': 'https://e-play.pl',
-                'Referer': 'https://e-play.pl/umowy/'
+                'Origin': 'https://e-play.com',
+                'Referer': 'https://e-play.com/deals/'
             },
             timeout=30
         )

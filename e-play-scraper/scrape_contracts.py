@@ -1,5 +1,5 @@
 """
-Scrape contracts from e-play.pl/umowy/
+Scrape contracts from e-play.com/deals/
 Extracts: subjects, date, flag, and link
 """
 from curl_cffi import requests
@@ -8,7 +8,7 @@ import json
 import csv
 import re
 
-url = 'https://e-play.pl/umowy/'
+url = 'https://e-play.com/deals/'
 
 print("Fetching contracts page...")
 response = requests.get(url, impersonate="chrome")

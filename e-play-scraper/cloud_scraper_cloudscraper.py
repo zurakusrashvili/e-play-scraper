@@ -7,7 +7,7 @@ import os
 import time
 import random
 
-API_URL = 'https://e-play.pl/wp-json/contracts/v1/filter'
+API_URL = 'https://e-play.com/wp-json/contracts/v1/filter'
 DELAY_BETWEEN_PAGES = (0.5, 1)
 
 # Google Sheets config
@@ -58,8 +58,8 @@ def fetch_contracts_page(scraper, page=1, quantity=120):
     headers = {
         'Content-Type': 'application/json',
         'Accept': '*/*',
-        'Origin': 'https://e-play.pl',
-        'Referer': 'https://e-play.pl/umowy/'
+        'Origin': 'https://e-play.com',
+        'Referer': 'https://e-play.com/deals/'
     }
     
     try:
@@ -87,9 +87,9 @@ def scrape_all_contracts():
     scraper = get_scraper()
     
     # Visit the page first to get cookies
-    print("Visiting e-play.pl to establish session...")
+    print("Visiting e-play.com to establish session...")
     try:
-        response = scraper.get('https://e-play.pl/umowy/', timeout=30)
+        response = scraper.get('https://e-play.com/deals/', timeout=30)
         if response.status_code == 200:
             print("✓ Session established")
         else:

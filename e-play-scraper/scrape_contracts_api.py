@@ -1,6 +1,6 @@
 """
-Scrape contracts from e-play.pl using their API
-API: https://e-play.pl/wp-json/contracts/v1/filter
+Scrape contracts from e-play.com using their API
+API: https://e-play.com/wp-json/contracts/v1/filter
 """
 from curl_cffi import requests
 import json
@@ -28,13 +28,13 @@ HEADERS = {
     'accept-language': 'ka-GE,ka;q=0.9,en-GB;q=0.8,en-US;q=0.7,en;q=0.6',
     'cache-control': 'no-cache',
     'content-type': 'application/json',
-    'origin': 'https://e-play.pl',
+    'origin': 'https://e-play.com',
     'pragma': 'no-cache',
-    'referer': 'https://e-play.pl/umowy/',
+    'referer': 'https://e-play.com/deals/',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
 }
 
-API_URL = 'https://e-play.pl/wp-json/contracts/v1/filter'
+API_URL = 'https://e-play.com/wp-json/contracts/v1/filter'
 
 # Delays
 DELAY_BETWEEN_PAGES = (0.5, 1)  # Random delay between pages

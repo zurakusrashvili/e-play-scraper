@@ -10,7 +10,7 @@ import random
 import subprocess
 import sys
 
-API_URL = 'https://e-play.pl/wp-json/contracts/v1/filter'
+API_URL = 'https://e-play.com/wp-json/contracts/v1/filter'
 DELAY_BETWEEN_PAGES = (0.5, 1)
 
 # Google Sheets config
@@ -172,8 +172,8 @@ def test_cookies(cookies):
         headers = {
             'accept': '*/*',
             'content-type': 'application/json',
-            'origin': 'https://e-play.pl',
-            'referer': 'https://e-play.pl/umowy/',
+            'origin': 'https://e-play.com',
+            'referer': 'https://e-play.com/deals/',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
         
@@ -205,9 +205,9 @@ HEADERS = {
     'accept-language': 'ka-GE,ka;q=0.9,en-GB;q=0.8,en-US;q=0.7,en;q=0.6',
     'cache-control': 'no-cache',
     'content-type': 'application/json',
-    'origin': 'https://e-play.pl',
+    'origin': 'https://e-play.com',
     'pragma': 'no-cache',
-    'referer': 'https://e-play.pl/umowy/',
+    'referer': 'https://e-play.com/deals/',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
 }
 
