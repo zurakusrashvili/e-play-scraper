@@ -6,6 +6,8 @@ Hits the e-play.com API directly with curl_cffi (no cookies, no Cloudflare bypas
 from curl_cffi import requests
 import json
 import os
+import sys
+import subprocess
 import time
 import random
 
@@ -29,9 +31,48 @@ SHEETS_CREDENTIALS_JSON = os.getenv('SHEETS_CREDENTIALS_JSON', '')  # Base64 or 
 SHEETS_SPREADSHEET_NAME = os.getenv('SHEETS_SPREADSHEET_NAME', 'E-Play Contracts')
 SHEETS_WORKSHEET_NAME = os.getenv('SHEETS_WORKSHEET_NAME', 'Contracts')
 
+# Cloudflare fallback state
+_cloudscraper_session = None   # lazily created cloudscraper instance
+_fallback_active = False       # once True, use cloudscraper for all remaining pages
+_fallback_engaged = False      # True if fallback was EVER used this run (for final reporting)
+
+
+def _get_cloudscraper():
+    """Lazily create + cache a cloudscraper session (install on demand)."""
+    global _cloudscraper_session
+
+    if _cloudscraper_session is not None:
+        return _cloudscraper_session
+
+    try:
+        import cloudscraper
+    except ImportError:
+        print("Installing cloudscraper...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "cloudscraper"])
+        import cloudscraper
+
+    scraper = cloudscraper.create_scraper(
+        browser={
+            'browser': 'chrome',
+            'platform': 'windows',
+            'desktop': True
+        }
+    )
+
+    # Best-effort: establish a session by visiting the deals page first.
+    try:
+        scraper.get('https://e-play.com/deals/', timeout=30)
+    except Exception as e:
+        print(f"[WARN] cloudscraper session warm-up failed (continuing): {e}")
+
+    _cloudscraper_session = scraper
+    return _cloudscraper_session
+
 
 def fetch_contracts_page(page=1, quantity=120):
-    """Fetch one page of contracts from API"""
+    """Fetch one page of contracts from API (direct curl_cffi, with cloudscraper 403 fallback)."""
+    global _fallback_active, _fallback_engaged
+
     payload = {
         'paged': page,
         'quantity': quantity,
@@ -45,18 +86,48 @@ def fetch_contracts_page(page=1, quantity=120):
         'date_to': ''
     }
 
+    # Direct curl_cffi attempt (happy path, no cookies) unless fallback already engaged.
+    if not _fallback_active:
+        try:
+            response = requests.post(
+                API_URL,
+                json=payload,
+                headers=HEADERS,
+                timeout=30,
+                impersonate="chrome"
+            )
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 403:
+                print(f"[WARN] Direct request got 403 on page {page} — switching to cloudscraper fallback")
+                _fallback_active = True
+                _fallback_engaged = True
+                # fall through to cloudscraper branch
+            else:
+                print(f"[WARN] Unexpected status {response.status_code} on page {page}")
+                return None
+        except Exception as e:
+            print(f"[WARN] Direct request failed on page {page} ({e}) — switching to cloudscraper fallback")
+            _fallback_active = True
+            _fallback_engaged = True
+            # fall through to cloudscraper branch
+
+    # Cloudscraper fallback branch.
     try:
-        response = requests.post(
-            API_URL,
-            json=payload,
-            headers=HEADERS,
-            timeout=30,
-            impersonate="chrome"
-        )
-        response.raise_for_status()
-        return response.json()
+        scraper = _get_cloudscraper()
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': '*/*',
+            'Origin': 'https://e-play.com',
+            'Referer': 'https://e-play.com/deals/'
+        }
+        response = scraper.post(API_URL, json=payload, headers=headers, timeout=30)
+        if response.status_code == 200:
+            return response.json()
+        print(f"[WARN] cloudscraper also got status {response.status_code} on page {page}")
+        return None
     except Exception as e:
-        print(f"Error fetching page {page}: {e}")
+        print(f"[WARN] cloudscraper request failed on page {page}: {e}")
         return None
 
 
@@ -149,6 +220,10 @@ def scrape_all_contracts():
 
 def upload_to_google_sheets(contracts):
     """Upload contracts to Google Sheets"""
+    if not contracts:
+        print("[ABORT] Refusing to upload 0 contracts — would wipe the sheet. Skipping upload.")
+        return False
+
     try:
         import gspread
         from google.oauth2.service_account import Credentials
@@ -240,11 +315,26 @@ def main():
     contracts = scrape_all_contracts()
     print(f"\nTotal contracts found: {len(contracts)}")
 
-    # Upload to Google Sheets (if enabled)
-    if UPLOAD_TO_SHEETS:
+    # Data-safety: a run that scraped nothing is almost certainly a block or an
+    # API change. Never upload (an empty upload would wipe the sheet) and fail loudly.
+    if len(contracts) == 0:
+        print("\n" + "=" * 70)
+        print("[FATAL] Scraped 0 contracts — likely blocked by Cloudflare or the API changed.")
+        print("[FATAL] Not uploading (sheet left intact).")
+        print("=" * 70)
+        sys.exit(1)
+
+    # Upload to Google Sheets (if enabled). Empty case already exited above.
+    if UPLOAD_TO_SHEETS and contracts:
         upload_to_google_sheets(contracts)
     else:
         print("Google Sheets upload disabled (set UPLOAD_TO_SHEETS=true to enable)")
+
+    if _fallback_engaged:
+        print("\n" + "=" * 70)
+        print("[NOTE] Direct access was blocked this run; data was retrieved via cloudscraper fallback.")
+        print("[NOTE] Consider checking Cloudflare status.")
+        print("=" * 70)
 
     print("Done!")
     return contracts
