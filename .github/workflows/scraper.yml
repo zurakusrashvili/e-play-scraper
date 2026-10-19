@@ -7,6 +7,17 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 jobs:
+  # Re-enable this workflow on every run so GitHub's 60-day inactivity timer never disables the schedule
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+    - name: Reset inactivity timer
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/scraper.yml/enable"
+
   scrape:
     runs-on: ubuntu-latest
     
